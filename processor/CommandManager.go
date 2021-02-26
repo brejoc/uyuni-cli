@@ -3,6 +3,7 @@ package processor
 import (
 	"fmt"
 	"os"
+	"os/exec"
 )
 
 const (
@@ -39,8 +40,17 @@ func (manager *ToolsCommandManager) registerTool(tool toolCmd) {
 	manager.toolsCommands[tool.Id] = tool
 }
 
+func populateSpaceWalkUtils(manager *ToolsCommandManager){
+	err := exec.Command("rpm", "-q", "spacewalk-utils").Run()
+	fmt.Println(err)
+	if err == nil{
+		manager.registerTool(externalToolCommand("spacewalk-clone-by-date", "/usr/bin/spacewalk-clone-by-date", "execute sql command directly on database"))
+	}
+}
+
 func GetToolsCommandManager() ToolsCommandManager {
 	manager := ToolsCommandManager{make([]string,0), make(map[string]toolCmd)}
+	populateSpaceWalkUtils(&manager)
 	manager.registerTool(externalToolCommand("spacewalk-sql", "/usr/bin/spacewalk-sql", "execute sql command directly on database"))
 	manager.registerTool(externalToolCommand("spacewalk-repo-sync", "/usr/bin/spacewalk-repo-sync", "start repository synchronization"))
 	manager.registerTool(externalToolCommand("spacewalk-debug", "/usr/bin/spacewalk-debug", "export debug information"))
